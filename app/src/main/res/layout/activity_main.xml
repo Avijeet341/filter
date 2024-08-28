@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/expBgBlue"
+    android:background="@color/white_smoke"
     android:id="@+id/main"
     tools:context=".MainActivity">
 
@@ -844,7 +844,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:layout_marginTop="24dp"
-                android:layout_marginBottom="18dp">
+                android:layout_marginBottom="16dp">
 
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/clear_filter_button"
