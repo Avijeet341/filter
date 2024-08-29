@@ -9,6 +9,7 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 
 class HistogramRangeSlider @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
@@ -26,6 +27,9 @@ class HistogramRangeSlider @JvmOverloads constructor(
     private val thumbRadius = 50f
     private val cornerRadius = 4f
     private var histogramData: List<Float> = listOf()
+    private var minAllowedValue = 0f
+    private var maxAllowedValue = 1f
+    private var valueRange = 1f
 
     private var leftThumbX = 0f
     private var rightThumbX = 0f
@@ -47,11 +51,16 @@ class HistogramRangeSlider @JvmOverloads constructor(
         setShadowLayer(12f, 0f, 6f, shadowColor)
     }
 
+
     private val thumbStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = thumbStrokeColor
         style = Paint.Style.STROKE
         strokeWidth = thumbStrokeWidth
     }
+
+    private var initialTouchY = 0f
+    private var isScrollingParent = false
+    private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
 
     init {
         setLayerType(LAYER_TYPE_SOFTWARE, null)
@@ -61,6 +70,8 @@ class HistogramRangeSlider @JvmOverloads constructor(
         histogramData = data
         invalidate()
     }
+
+
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
@@ -119,96 +130,134 @@ class HistogramRangeSlider @JvmOverloads constructor(
 
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
+                initialTouchY = event.y
                 lastTouchX = event.x
                 val touchArea = thumbRadius * 1.5f
                 when {
                     event.x in (leftThumbX - touchArea)..(leftThumbX + touchArea) -> {
                         isDraggingLeft = true
                         isDraggingRight = false
+                        parent.requestDisallowInterceptTouchEvent(true)
                     }
                     event.x in (rightThumbX - touchArea)..(rightThumbX + touchArea) -> {
                         isDraggingRight = true
                         isDraggingLeft = false
+                        parent.requestDisallowInterceptTouchEvent(true)
                     }
                     else -> {
                         isDraggingLeft = false
                         isDraggingRight = false
+                        isScrollingParent = false
                     }
                 }
             }
             MotionEvent.ACTION_MOVE -> {
                 val dx = event.x - lastTouchX
-                lastTouchX = event.x
+                val dy = event.y - initialTouchY
 
-                if (isOverlapped) {
-                    if (dx > 0) {
-                        // Moving right
-                        leftThumbX = (leftThumbX + dx).coerceIn(minX, maxX)
-                        if (leftThumbX > rightThumbX) {
-                            val temp = leftThumbX
-                            leftThumbX = rightThumbX
-                            rightThumbX = temp
-                            isDraggingLeft = false
-                            isDraggingRight = true
-                        }
-                        isOverlapped = false
-                    } else if (dx < 0) {
-                        // Moving left
-                        rightThumbX = (rightThumbX + dx).coerceIn(minX, maxX)
-                        if (rightThumbX < leftThumbX) {
-                            val temp = rightThumbX
-                            rightThumbX = leftThumbX
-                            leftThumbX = temp
-                            isDraggingRight = false
-                            isDraggingLeft = true
-                        }
-                        isOverlapped = false
-                    }
-                } else {
-                    when {
-                        isDraggingLeft -> {
-                            leftThumbX = (leftThumbX + dx).coerceIn(minX, rightThumbX)
-                            if (leftThumbX == rightThumbX) {
-                                isOverlapped = true
-                            }
-                        }
-                        isDraggingRight -> {
-                            rightThumbX = (rightThumbX + dx).coerceIn(leftThumbX, maxX)
-                            if (rightThumbX == leftThumbX) {
-                                isOverlapped = true
-                            }
-                        }
+                if (!isDraggingLeft && !isDraggingRight && !isScrollingParent) {
+                    if (Math.abs(dy) > touchSlop && Math.abs(dy) > Math.abs(dx)) {
+                        isScrollingParent = true
+                        parent.requestDisallowInterceptTouchEvent(false)
+                        return false
                     }
                 }
 
-                updateRange()
-                invalidate()
+                if (isDraggingLeft || isDraggingRight) {
+                    lastTouchX = event.x
+
+                    if (isOverlapped) {
+                        if (dx > 0) {
+                            // Moving right
+                            leftThumbX = (leftThumbX + dx).coerceIn(minX, maxX)
+                            if (leftThumbX > rightThumbX) {
+                                val temp = leftThumbX
+                                leftThumbX = rightThumbX
+                                rightThumbX = temp
+                                isDraggingLeft = false
+                                isDraggingRight = true
+                            }
+                            isOverlapped = false
+                        } else if (dx < 0) {
+                            // Moving left
+                            rightThumbX = (rightThumbX + dx).coerceIn(minX, maxX)
+                            if (rightThumbX < leftThumbX) {
+                                val temp = rightThumbX
+                                rightThumbX = leftThumbX
+                                leftThumbX = temp
+                                isDraggingRight = false
+                                isDraggingLeft = true
+                            }
+                            isOverlapped = false
+                        }
+                    } else {
+                        when {
+                            isDraggingLeft -> {
+                                leftThumbX = (leftThumbX + dx).coerceIn(minX, rightThumbX)
+                                if (leftThumbX == rightThumbX) {
+                                    isOverlapped = true
+                                }
+                            }
+                            isDraggingRight -> {
+                                rightThumbX = (rightThumbX + dx).coerceIn(leftThumbX, maxX)
+                                if (rightThumbX == leftThumbX) {
+                                    isOverlapped = true
+                                }
+                            }
+                        }
+                    }
+
+                    updateRange()
+                    invalidate()
+                    return true
+                }
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 isDraggingLeft = false
                 isDraggingRight = false
+                isScrollingParent = false
+                parent.requestDisallowInterceptTouchEvent(false)
             }
         }
-        return true
+        return isDraggingLeft || isDraggingRight || super.onTouchEvent(event)
     }
-    private fun updateRange() {
-        val minAllowedPrice = 5000f
-        val maxAllowedPrice = 50000f
-        val priceRange = maxAllowedPrice - minAllowedPrice
 
+
+
+
+    fun setValueRange(minValue: Float, maxValue: Float) {
+        minAllowedValue = minValue
+        maxAllowedValue = maxValue
+        valueRange = maxValue - minValue
+        updateRange()
+        invalidate()
+    }
+
+    fun getSelectedRange(): Pair<Float, Float> {
         val totalWidth = width.toFloat() - paddingLeft - paddingRight - 2 * thumbRadius
         val leftPosition = leftThumbX - (paddingLeft + thumbRadius)
         val rightPosition = rightThumbX - (paddingLeft + thumbRadius)
 
-        val minPrice = minAllowedPrice + (priceRange * (leftPosition / totalWidth))
-        val maxPrice = minAllowedPrice + (priceRange * (rightPosition / totalWidth))
+        val minValue = minAllowedValue + (valueRange * (leftPosition / totalWidth))
+        val maxValue = minAllowedValue + (valueRange * (rightPosition / totalWidth))
 
-        val adjustedMinPrice = minPrice.coerceIn(minAllowedPrice, maxAllowedPrice)
-        val adjustedMaxPrice = maxPrice.coerceIn(minAllowedPrice, maxAllowedPrice)
+        return Pair(
+            minValue.coerceIn(minAllowedValue, maxAllowedValue),
+            maxValue.coerceIn(minAllowedValue, maxAllowedValue)
+        )
+    }
 
+    fun resetSlider() {
+        leftThumbX = paddingLeft.toFloat() + thumbRadius
+        rightThumbX = width.toFloat() - paddingRight - thumbRadius
+        updateRange()
+        invalidate()
+    }
+
+    private fun updateRange() {
+        val (minPrice, maxPrice) = getSelectedRange()
         Log.d("RangeSlider", "Thumb X positions: left=$leftThumbX, right=$rightThumbX")
-        Log.d("RangeSlider", "Calculated Prices: minPrice=$adjustedMinPrice, maxPrice=$adjustedMaxPrice")
-
-        onRangeChangeListener?.onRangeChanged(adjustedMinPrice, adjustedMaxPrice)
+        Log.d("RangeSlider", "Calculated Prices: minPrice=$minPrice, maxPrice=$maxPrice")
+        onRangeChangeListener?.onRangeChanged(minPrice, maxPrice)
     }
 }

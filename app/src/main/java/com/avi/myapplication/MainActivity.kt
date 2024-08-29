@@ -11,10 +11,11 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
-import com.google.android.material.slider.RangeSlider
 import com.google.android.material.switchmaterial.SwitchMaterial
+import java.text.NumberFormat
+import java.util.Locale
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), HistogramRangeSlider.OnRangeChangeListener {
 
     private lateinit var propertyTypeChipGroup: ChipGroup
     private lateinit var tenantTypeChipGroup: ChipGroup
@@ -24,10 +25,13 @@ class MainActivity : AppCompatActivity() {
     private lateinit var floorChipGroup: ChipGroup
     private lateinit var areaChipGroup: ChipGroup
 
-    private lateinit var budgetSlider: RangeSlider
-    private lateinit var budgetDisplay: TextView
-    private lateinit var areaSlider: RangeSlider
-    private lateinit var areaDisplay: TextView
+    private lateinit var histogramRangeSlider: HistogramRangeSlider
+    private lateinit var histogramRangeSliderArea: HistogramRangeSlider
+    private lateinit var minPriceTextView: TextView
+    private lateinit var maxPriceTextView: TextView
+    private lateinit var minAreaTextView: TextView
+    private lateinit var maxAreaTextView: TextView
+    private lateinit var maxAreaUnitTextView: TextView
 
     private lateinit var liftService: SwitchMaterial
     private lateinit var generatorService: SwitchMaterial
@@ -39,6 +43,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var searchButton: Button
     private lateinit var areaInput: EditText
     private lateinit var addAreaButton: Button
+
+
+
+
+    private val maxAllowedPrice = 50000f
+    private val maxAllowedArea = 3000f
+    private val currencyFormat = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
+    private val numberFormat = NumberFormat.getNumberInstance(Locale.US)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,7 +65,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         initializeViews()
-        setupSliders()
+        setupHistogramRangeSlider()
+        setupHistogramRangeSliderArea()
         setupButtons()
         setupAreaChipGroup()
     }
@@ -67,10 +80,13 @@ class MainActivity : AppCompatActivity() {
         floorChipGroup = findViewById(R.id.floor_chip_group)
         areaChipGroup = findViewById(R.id.area_chip_group)
 
-        budgetSlider = findViewById(R.id.budget_slider)
-        budgetDisplay = findViewById(R.id.budget_display)
-        areaSlider = findViewById(R.id.area_slider)
-        areaDisplay = findViewById(R.id.area_display)
+        histogramRangeSlider = findViewById(R.id.histogramRangeSlider)
+        histogramRangeSliderArea = findViewById(R.id.histogramRangeSliderArea)
+        minPriceTextView = findViewById(R.id.minPriceTextView)
+        maxPriceTextView = findViewById(R.id.maxPriceTextView)
+        minAreaTextView = findViewById(R.id.minAreaTextView)
+        maxAreaTextView = findViewById(R.id.maxAreaTextView)
+        maxAreaUnitTextView = findViewById(R.id.maxAreaUnitTextView)
 
         liftService = findViewById(R.id.lift_service)
         generatorService = findViewById(R.id.generator_service)
@@ -84,17 +100,48 @@ class MainActivity : AppCompatActivity() {
         addAreaButton = findViewById(R.id.add_area_button)
     }
 
-    private fun setupSliders() {
-        budgetSlider.addOnChangeListener { slider, _, _ ->
-            val values = slider.values
-            budgetDisplay.text = "₹${values[0].toInt()} - ₹${values[1].toInt()}"
+    private fun setupHistogramRangeSlider() {
+        histogramRangeSlider.onRangeChangeListener = this
+
+        // Sample data for budget slider
+        val sampleData = listOf(
+            5f, 8f, 12f, 18f, 25f, 35f, 48f, 64f, 85f, 110f,
+            140f, 175f, 215f, 260f, 310f, 365f, 425f, 490f, 560f, 635f,
+            715f, 800f, 890f, 985f, 1000f, 985f, 890f, 800f, 715f, 635f,
+            560f, 490f, 425f, 365f, 310f, 260f, 215f, 175f, 140f, 110f,
+            85f, 64f, 48f, 35f, 25f, 18f, 12f, 8f, 5f, 3f,
+            // Extended tail
+            2f, 2f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f
+        )
+        histogramRangeSlider.setHistogramData(sampleData)
+        histogramRangeSlider.setValueRange(5000f, 50000f)
+    }
+
+    private fun setupHistogramRangeSliderArea() {
+        histogramRangeSliderArea.onRangeChangeListener = object : HistogramRangeSlider.OnRangeChangeListener {
+            override fun onRangeChanged(minValue: Float, maxValue: Float) {
+
+                val formattedMinArea = numberFormat.format(minValue.toInt())
+                val formattedMaxArea = numberFormat.format(maxValue.toInt())
+
+                // Set the text for the minAreaTextView and maxAreaTextView
+                minAreaTextView.text = formattedMinArea
+                maxAreaTextView.text = formattedMaxArea
+            }
         }
 
-        areaSlider.addOnChangeListener { slider, _, _ ->
-            val values = slider.values
-            areaDisplay.text = "${values[0].toInt()} Sqft - ${values[1].toInt()} Sqft"
-        }
+
+        val areaData = listOf(
+            100f, 150f, 200f, 250f, 300f, 350f, 400f, 450f, 500f, 600f,
+            700f, 800f, 900f, 1000f, 1200f, 1400f, 1600f, 1800f, 2000f, 2200f,
+            2400f, 2600f, 2800f, 3000f, 2800f, 2600f, 2400f, 2200f, 2000f, 1800f,
+            1600f, 1400f, 1200f, 1000f, 900f, 800f, 700f, 600f, 500f, 400f
+        )
+        histogramRangeSliderArea.setHistogramData(areaData)
+        histogramRangeSliderArea.setValueRange(800f, 3000f)
     }
+
+
 
     private fun setupButtons() {
         clearFilterButton.setOnClickListener {
@@ -140,8 +187,8 @@ class MainActivity : AppCompatActivity() {
         floorChipGroup.clearCheck()
         areaChipGroup.removeAllViews()
 
-        budgetSlider.values = listOf(100f, 10000f)
-        areaSlider.values = listOf(0f, 10000f)
+        histogramRangeSlider.resetSlider()
+        histogramRangeSliderArea.resetSlider()
 
         liftService.isChecked = false
         generatorService.isChecked = false
@@ -151,7 +198,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun applyFilters() {
-        // Collect all filter values
         val propertyType = getSelectedChipText(propertyTypeChipGroup)
         val tenantType = getSelectedChipText(tenantTypeChipGroup)
         val bedrooms = getSelectedChipText(bedroomsChipGroup)
@@ -160,8 +206,8 @@ class MainActivity : AppCompatActivity() {
         val floor = getSelectedChipText(floorChipGroup)
         val areas = getAreaChips()
 
-        val budgetRange = budgetSlider.values
-        val areaRange = areaSlider.values
+        val budgetRange = histogramRangeSlider.getSelectedRange()
+        val areaRange = histogramRangeSliderArea.getSelectedRange()
 
         val services = mutableListOf<String>()
         if (liftService.isChecked) services.add("Lift")
@@ -178,8 +224,8 @@ class MainActivity : AppCompatActivity() {
         println("Balcony: $balcony")
         println("Floor: $floor")
         println("Areas: $areas")
-        println("Budget Range: ₹${budgetRange[0].toInt()} - ₹${budgetRange[1].toInt()}")
-        println("Area Range: ${areaRange[0].toInt()} Sqft - ${areaRange[1].toInt()} Sqft")
+        println("Budget Range: ₹${budgetRange.first.toInt()} - ₹${budgetRange.second.toInt()}")
+        println("Area Range: ${areaRange.first.toInt()} Sq.ft - ${areaRange.second.toInt()} Sq.ft")
         println("Services: $services")
     }
 
@@ -197,4 +243,19 @@ class MainActivity : AppCompatActivity() {
             .map { areaChipGroup.getChildAt(it) as Chip }
             .map { it.text.toString() }
     }
+
+    override fun onRangeChanged(minPrice: Float, maxPrice: Float) {
+        currencyFormat.maximumFractionDigits = 0
+        val formattedMinPrice = currencyFormat.format(minPrice.toInt())
+        val formattedMaxPrice = if (maxPrice >= maxAllowedPrice) {
+            "${currencyFormat.format(maxPrice.toInt())}+"
+        } else {
+            currencyFormat.format(maxPrice.toInt())
+        }
+
+        minPriceTextView.text = formattedMinPrice
+        maxPriceTextView.text = formattedMaxPrice
+    }
+
+
 }

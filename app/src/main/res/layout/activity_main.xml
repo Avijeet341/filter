@@ -26,12 +26,11 @@
             app:titleTextAppearance="@style/CustomToolbarTitleTextAppearance"
              />
     </com.google.android.material.appbar.AppBarLayout>
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/white_smoke"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -134,6 +133,10 @@
                     android:background="@drawable/rounded_blue_button"
                     android:layout_marginStart="8dp"/>
             </LinearLayout>
+
+
+
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -295,6 +298,8 @@
 
             </com.google.android.material.chip.ChipGroup>
 
+
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -304,27 +309,37 @@
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
-            <com.google.android.material.slider.RangeSlider
-                android:id="@+id/budget_slider"
+            <com.avi.myapplication.HistogramRangeSlider
+                android:id="@+id/histogramRangeSlider"
                 android:layout_width="match_parent"
-                android:layout_marginTop="16dp"
-                android:layout_height="wrap_content"
-                android:valueFrom="100"
-                android:valueTo="10000"
-                app:values="@array/initial_slider_values"
-                app:thumbColor="@color/expBlue"
-                app:trackColorActive="@color/black"
-                app:trackColorInactive="@color/messangerBlue"/>
+                android:layout_height="150dp"
+                android:padding="4dp"
+                />
 
-            <TextView
-                android:id="@+id/budget_display"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="0dp"
-                android:fontFamily="@font/lato_regular"
-                android:text="₹100 - ₹10000"
-                android:textColor="@color/black"
-                android:textSize="16sp" />
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+
+                <TextView
+                    android:id="@+id/minPriceTextView"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"/>
+
+                <TextView
+                    android:id="@+id/maxPriceTextView"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textAlignment="textEnd"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"/>
+
+            </LinearLayout>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -724,35 +739,76 @@
                     app:chipCornerRadius="7dp" />
 
             </com.google.android.material.chip.ChipGroup>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Built up area"
-                android:textStyle="bold"
-                android:textSize="20sp"
-                android:textColor="@color/expBlue"
-                android:layout_marginTop="16dp"/>
-
-            <com.google.android.material.slider.RangeSlider
-                android:id="@+id/area_slider"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:valueFrom="0"
-                android:valueTo="10000"
-                app:thumbColor="@color/expBlue"
-                app:trackColorActive="@color/expBlue"
-                app:trackColorInactive="@color/black"
-                app:values="@array/initial_area_values" />
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/area_display"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:fontFamily="@font/montserrat_regular"
-                android:text="0 Sq.ft. - 10000 Sq.ft."
-                android:textColor="@color/black" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Built up area"
+                    android:textStyle="bold"
+                    android:textSize="20sp"
+                    android:textColor="@color/expBlue"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp" />
+
+                <com.avi.myapplication.HistogramRangeSlider
+                    android:id="@+id/histogramRangeSliderArea"
+                    android:layout_width="match_parent"
+                    android:layout_height="150dp"
+                    android:padding="4dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        android:id="@+id/minAreaTextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/montserrat_regular"
+                        android:textColor="@color/black"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=" Sq.ft"
+                        android:fontFamily="@font/montserrat_regular"
+                        android:textColor="@color/black"
+                        android:textSize="16sp"
+                        android:layout_marginStart="4dp" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1" />
+
+                    <TextView
+                        android:id="@+id/maxAreaTextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/montserrat_regular"
+                        android:textColor="@color/black"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:id="@+id/maxAreaUnitTextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=" Sq.ft"
+                        android:fontFamily="@font/montserrat_regular"
+                        android:textColor="@color/black"
+                        android:textSize="16sp"
+                        android:layout_marginStart="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+
+
 
             <TextView
                 android:layout_width="wrap_content"
@@ -873,7 +929,7 @@
             </LinearLayout>
 
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
 
 
