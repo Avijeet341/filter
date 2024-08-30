@@ -1,6 +1,9 @@
 package com.avi.myapplication
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -12,6 +15,8 @@ import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.switchmaterial.SwitchMaterial
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -117,32 +122,49 @@ class MainActivity : AppCompatActivity(), HistogramRangeSlider.OnRangeChangeList
         histogramRangeSlider.setValueRange(5000f, 50000f)
     }
 
+
+
+
+
+
     private fun setupHistogramRangeSliderArea() {
         histogramRangeSliderArea.onRangeChangeListener = object : HistogramRangeSlider.OnRangeChangeListener {
             override fun onRangeChanged(minValue: Float, maxValue: Float) {
-                // Format the area values to display as integers with thousands separator
-                val numberFormat = NumberFormat.getNumberInstance(Locale.US)
-                val formattedMinArea = numberFormat.format(minValue.toInt())
-                val formattedMaxArea = numberFormat.format(maxValue.toInt())
 
-                // Set the text for the minAreaTextView and maxAreaTextView
-                minAreaTextView.text = formattedMinArea
-                maxAreaTextView.text = formattedMaxArea
+
+                val formattedMinArea = minValue.toInt().toString()
+                val formattedMaxArea = maxValue.toInt().toString()
+
+                Log.d("MainActivity", "Formatted - minArea: $formattedMinArea, maxArea: $formattedMaxArea")
+
+                runOnUiThread {
+                    minAreaTextView.text = formattedMinArea
+                    maxAreaTextView.text = formattedMaxArea
+                    maxAreaUnitTextView.text = "Sq.ft"
+
+                    // Force layout update
+                    minAreaTextView.requestLayout()
+                    maxAreaTextView.requestLayout()
+                    maxAreaUnitTextView.requestLayout()
+                }
+
+                // Log after a short delay to ensure UI has updated
+                Handler(Looper.getMainLooper()).postDelayed({
+                    Log.d("MainActivity", "Delayed TextView values - minArea: ${minAreaTextView.text}, maxArea: ${maxAreaTextView.text}")
+                }, 100)
             }
         }
 
-        // Sample data for built up area slider
         val areaData = listOf(
             100f, 150f, 200f, 250f, 300f, 350f, 400f, 450f, 500f, 600f,
             700f, 800f, 900f, 1000f, 1200f, 1400f, 1600f, 1800f, 2000f, 2200f,
             2400f, 2600f, 2800f, 3000f, 2800f, 2600f, 2400f, 2200f, 2000f, 1800f,
             1600f, 1400f, 1200f, 1000f, 900f, 800f, 700f, 600f, 500f, 400f
         )
+        // ... rest of the setup ...
         histogramRangeSliderArea.setHistogramData(areaData)
         histogramRangeSliderArea.setValueRange(800f, 3000f)
     }
-
-
     private fun setupButtons() {
         clearFilterButton.setOnClickListener {
             clearAllFilters()

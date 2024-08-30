@@ -10,6 +10,8 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 class HistogramRangeSlider @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
@@ -238,14 +240,20 @@ class HistogramRangeSlider @JvmOverloads constructor(
         val leftPosition = leftThumbX - (paddingLeft + thumbRadius)
         val rightPosition = rightThumbX - (paddingLeft + thumbRadius)
 
+        Log.d("HistogramRangeSlider", "totalWidth: $totalWidth, leftPosition: $leftPosition, rightPosition: $rightPosition")
+        Log.d("HistogramRangeSlider", "minAllowedValue: $minAllowedValue, maxAllowedValue: $maxAllowedValue, valueRange: $valueRange")
+
         val minValue = minAllowedValue + (valueRange * (leftPosition / totalWidth))
         val maxValue = minAllowedValue + (valueRange * (rightPosition / totalWidth))
+
+        Log.d("HistogramRangeSlider", "Calculated minValue: $minValue, maxValue: $maxValue")
 
         return Pair(
             minValue.coerceIn(minAllowedValue, maxAllowedValue),
             maxValue.coerceIn(minAllowedValue, maxAllowedValue)
         )
     }
+
 
     fun resetSlider() {
         leftThumbX = paddingLeft.toFloat() + thumbRadius
