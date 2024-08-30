@@ -120,7 +120,8 @@ class MainActivity : AppCompatActivity(), HistogramRangeSlider.OnRangeChangeList
     private fun setupHistogramRangeSliderArea() {
         histogramRangeSliderArea.onRangeChangeListener = object : HistogramRangeSlider.OnRangeChangeListener {
             override fun onRangeChanged(minValue: Float, maxValue: Float) {
-
+                // Format the area values to display as integers with thousands separator
+                val numberFormat = NumberFormat.getNumberInstance(Locale.US)
                 val formattedMinArea = numberFormat.format(minValue.toInt())
                 val formattedMaxArea = numberFormat.format(maxValue.toInt())
 
@@ -130,7 +131,7 @@ class MainActivity : AppCompatActivity(), HistogramRangeSlider.OnRangeChangeList
             }
         }
 
-
+        // Sample data for built up area slider
         val areaData = listOf(
             100f, 150f, 200f, 250f, 300f, 350f, 400f, 450f, 500f, 600f,
             700f, 800f, 900f, 1000f, 1200f, 1400f, 1600f, 1800f, 2000f, 2200f,
@@ -140,7 +141,6 @@ class MainActivity : AppCompatActivity(), HistogramRangeSlider.OnRangeChangeList
         histogramRangeSliderArea.setHistogramData(areaData)
         histogramRangeSliderArea.setValueRange(800f, 3000f)
     }
-
 
 
     private fun setupButtons() {
